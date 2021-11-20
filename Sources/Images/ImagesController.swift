@@ -33,10 +33,17 @@ class ImagesController: UIViewController {
     setup()
   }
 
+  override func viewWillLayoutSubviews() {
+    super.viewWillLayoutSubviews()
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+      self.gridView.collectionView.collectionViewLayout.invalidateLayout()
+    }
+  }
+
   // MARK: - Setup
 
   func setup() {
-    view.backgroundColor = UIColor.white
+    view.backgroundColor = .backgroundColor
 
     view.addSubview(gridView)
 
@@ -110,7 +117,9 @@ class ImagesController: UIViewController {
 
   func refreshView() {
     let hasImages = !cart.images.isEmpty
-    gridView.bottomView.g_fade(visible: hasImages)
+   // gridView.bottomView.g_fade(visible: hasImages)
+  //  gridView.doneButton.g_fade(visible: hasImages)
+      gridView.doneButton.isHidden = !hasImages
     gridView.collectionView.g_updateBottomInset(hasImages ? gridView.bottomView.frame.size.height : 0)
   }
 
@@ -126,7 +135,7 @@ class ImagesController: UIViewController {
   func makeGridView() -> GridView {
     let view = GridView()
     view.bottomView.alpha = 0
-    
+
     return view
   }
 
@@ -224,12 +233,12 @@ extension ImagesController: UICollectionViewDataSource, UICollectionViewDelegate
     if cart.images.contains(item) {
       cart.remove(item)
     } else {
-      // In single image selection mode, remove selected image when
-      // another image is clicked
-      if Config.Camera.imageLimit == 1 && cart.images.count == 1
-      {
-          cart.remove(cart.images[0])
-      }
+        // In single image selection mode, remove selected image when
+        // another image is clicked
+        if  cart.images.count == Config.Camera.imageLimit
+        {
+            cart.remove(cart.images[0])
+        }
 
       if Config.Camera.imageLimit == 0 || Config.Camera.imageLimit > cart.images.count{
         cart.add(item)
@@ -250,9 +259,14 @@ extension ImagesController: UICollectionViewDataSource, UICollectionViewDelegate
   func configureFrameView(_ cell: ImageCell, indexPath: IndexPath) {
     let item = items[(indexPath as NSIndexPath).item]
 
-    if let index = cart.images.index(of: item) {
+    if let index = cart.images.firstIndex(of: item) {
       cell.frameView.g_quickFade()
-      cell.frameView.label.text = "\(index + 1)"
+        if Config.Grid.FrameView.showImageCountLabel {
+            cell.frameView.label.text = "\(index + 1)"
+        }
+        else{
+            cell.frameView.label.text =  Config.Grid.FrameView.selectedImageOverlayText
+        }
     } else {
       cell.frameView.alpha = 0
     }

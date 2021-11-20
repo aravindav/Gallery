@@ -22,6 +22,7 @@ class GridView: UIView {
 
     setup()
     loadingIndicator.startAnimating()
+    doneButton.isHidden = true
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -31,36 +32,32 @@ class GridView: UIView {
   // MARK: - Setup
 
   private func setup() {
-    [collectionView, bottomView, topView, emptyView, loadingIndicator].forEach {
+    [collectionView, topView,emptyView, loadingIndicator].forEach {
       addSubview($0)
     }
 
-    [closeButton, arrowButton].forEach {
+    [closeButton, arrowButton,doneButton].forEach {
       topView.addSubview($0)
     }
 
-    [bottomBlurView, doneButton].forEach {
-        bottomView.addSubview($0)
+//    [bottomBlurView].forEach {
+//        bottomView.addSubview($0)
+//    }
+
+    var safeAreaInsetTop: CGFloat = 0
+    if #available(iOS 11, *) {
+      safeAreaInsetTop = UIApplication.shared.keyWindow?.safeAreaInsets.top ?? 0
     }
 
     Constraint.on(
       topView.leftAnchor.constraint(equalTo: topView.superview!.leftAnchor),
       topView.rightAnchor.constraint(equalTo: topView.superview!.rightAnchor),
-      topView.heightAnchor.constraint(equalToConstant: 40),
+      topView.topAnchor.constraint(equalTo: topView.superview!.topAnchor),
+      topView.heightAnchor.constraint(equalToConstant: 40 + safeAreaInsetTop),
 
       loadingIndicator.centerXAnchor.constraint(equalTo: loadingIndicator.superview!.centerXAnchor),
       loadingIndicator.centerYAnchor.constraint(equalTo: loadingIndicator.superview!.centerYAnchor)
     )
-
-    if #available(iOS 11, *) {
-      Constraint.on(
-        topView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor)
-      )
-    } else {
-      Constraint.on(
-        topView.topAnchor.constraint(equalTo: topView.superview!.topAnchor)
-      )
-    }
 
     bottomView.g_pinDownward()
     bottomView.g_pin(height: 80)
@@ -72,22 +69,36 @@ class GridView: UIView {
 
     bottomBlurView.g_pinEdges()
 
-    closeButton.g_pin(on: .top)
+    closeButton.g_pin(on: .top, constant: safeAreaInsetTop)
     closeButton.g_pin(on: .left)
     closeButton.g_pin(size: CGSize(width: 40, height: 40))
 
-    arrowButton.g_pinCenter()
+    arrowButton.g_pin(on: .centerX)
+    arrowButton.g_pin(on: .top, constant: safeAreaInsetTop)
     arrowButton.g_pin(height: 40)
 
-    doneButton.g_pin(on: .centerY)
-    doneButton.g_pin(on: .right, constant: -38)
+//    doneButton.g_pin(on: .centerY)
+//    doneButton.g_pin(on: .right, constant: -38)
+      
+   
+//      doneButton.g_pin(on: .centerX, constant: safeAreaInsetTop)
+//      doneButton.g_pin(on: .top, constant: safeAreaInsetTop)
+//      doneButton.g_pin(size: CGSize(width: 100, height: 40))
+//
+      doneButton.g_pin(on: .top, constant: safeAreaInsetTop)
+      doneButton.g_pin(on: .right)
+      doneButton.g_pin(size: CGSize(width: 80, height: 40))
+
+      print("doneButton frame \(doneButton.frame)")
+      print("closeButton frame \(closeButton.frame)")
+
   }
 
   // MARK: - Controls
 
   private func makeTopView() -> UIView {
     let view = UIView()
-    view.backgroundColor = UIColor.white
+    view.backgroundColor = .backgroundColor
 
     return view
   }
@@ -126,13 +137,19 @@ class GridView: UIView {
   }
 
   private func makeDoneButton() -> UIButton {
-    let button = UIButton(type: .system)
-    button.setTitleColor(UIColor.white, for: UIControl.State())
-    button.setTitleColor(UIColor.lightGray, for: .disabled)
-    button.titleLabel?.font = Config.Font.Text.regular.withSize(16)
-    button.setTitle("Gallery.Done".g_localize(fallback: "Done"), for: UIControl.State())
-    
-    return button
+//    let button = UIButton(type: .system)
+//    button.setTitleColor(UIColor.white, for: UIControl.State())
+//    button.setTitleColor(UIColor.lightGray, for: .disabled)
+//    button.titleLabel?.font = Config.Font.Text.regular.withSize(16)
+//    button.setTitle("Gallery.Done".g_localize(fallback: "Done"), for: UIControl.State())
+
+      let button = UIButton(type: .custom)
+      button.setTitle("Done", for: .normal)
+      button.setTitleColor(UIColor.darkGray, for: .normal)
+      //button.tintColor = Config.Grid.CloseButton.tintColor
+
+      return button
+
   }
 
   private func makeCollectionView() -> UICollectionView {
@@ -141,7 +158,7 @@ class GridView: UIView {
     layout.minimumLineSpacing = 2
 
     let view = UICollectionView(frame: .zero, collectionViewLayout: layout)
-    view.backgroundColor = UIColor.white
+    view.backgroundColor = UIColor.backgroundColor
 
     return view
   }
